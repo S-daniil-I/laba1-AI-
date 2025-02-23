@@ -16,7 +16,9 @@ train_data[categorical_cols] = train_data[categorical_cols].astype(str)  # Пр�
 encoder = OneHotEncoder(drop='first', sparse_output=False)
 encoded_cat = encoder.fit_transform(train_data[categorical_cols])
 encoded_df = pd.DataFrame(encoded_cat, columns=encoder.get_feature_names_out())
-print(encoded_df)
+
+train_data = train_data.drop(columns=categorical_cols)
+train_data = pd.concat([train_data.reset_index(drop=True), encoded_df.reset_index(drop=True)], axis=1)
 
 scaler = MinMaxScaler()
 train_data[num_columns] = scaler.fit_transform(train_data[num_columns])
