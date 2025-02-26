@@ -2,25 +2,30 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder,MinMaxScaler, StandardScaler
 
 train_data=pd.read_csv(r'D:\РАФ\2 курс\4сем\AI\data titan\train.csv')
-#test_data= pd.read_csv(r'D:\РАФ\2 курс\4сем\AI\data titan\test.csv')
 missing_values = train_data.isnull().sum()
-for column in train_data.columns:
-    mode_value=train_data[column].mode()[0]
-    train_data.fillna(mode_value,inplace=True)
+train_data['Title'] = train_data['Name'].str.extract(r' ([A-Za-z]+)\.', expand=False)
+
+categorical_cols = [ 'Sex', 'Cabin', 'Embarked', 'Title']
+num_columns = ['Age', 'SibSp', 'Parch', 'Fare']
+
+for column in categorical_cols:
+    mode_value = train_data[column].mode()[0]
+    train_data[column] = train_data[column].fillna(mode_value)
+
+for column in num_columns:
+    mean_value = train_data[column].mean()
+    train_data[column] = train_data[column].fillna(mean_value)
 after_missing_values=train_data.isnull().sum()
+print(f'Missing values before fillings: {missing_values}')
+print(f'Missing values after fillings:{after_missing_values}')
 
-categorical_cols = ['HomePlanet', 'CryoSleep', 'Cabin', 'Destination', 'VIP']
-num_columns = ['Age', 'RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
-
-train_data[categorical_cols] = train_data[categorical_cols].astype(str)  # Преобразуем все категории в строки
-encoder = OneHotEncoder(drop='first', sparse_output=False)
-encoded_cat = encoder.fit_transform(train_data[categorical_cols])
-encoded_df = pd.DataFrame(encoded_cat, columns=encoder.get_feature_names_out())
-
-train_data = train_data.drop(columns=categorical_cols)
-train_data = pd.concat([train_data.reset_index(drop=True), encoded_df.reset_index(drop=True)], axis=1)
-
-scaler = MinMaxScaler()
+scaler = StandardScaler()
 train_data[num_columns] = scaler.fit_transform(train_data[num_columns])
-print(train_data.head())
-print(after_missing_values)
+train_data.to_csv("processed_titanic",index=False)
+
+train_data = pd.get_dummies(train_data, columns=categorical_cols, drop_first=True)
+train_data.to_csv("processed_titanic.csv",index=False)
+
+
+
+
